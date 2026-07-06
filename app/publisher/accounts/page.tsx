@@ -10,6 +10,7 @@ import { PLATFORM_META } from "@/lib/publisher/types";
 import { Plus, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { DisconnectAccount } from "@/components/publisher/disconnect-account";
 import { OAuthConnectBanner } from "@/components/publisher/oauth-connect-banner";
+import { RedditSubredditInput } from "@/components/publisher/reddit-subreddit-input";
 
 const SUPPORTED_PLATFORMS: { slug: PlatformSlug; available: boolean; note?: string }[] = [
   { slug: "x",         available: true },
@@ -73,6 +74,16 @@ export default async function AccountsPage({
                         </span>
                       )}
                     </p>
+                    {account.platform === "reddit" && (
+                      <RedditSubredditInput
+                        accountId={account.id}
+                        currentSubreddit={
+                          account.metadata
+                            ? ((JSON.parse(account.metadata) as { subreddit?: string }).subreddit ?? "")
+                            : ""
+                        }
+                      />
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {expired ? (

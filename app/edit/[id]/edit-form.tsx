@@ -302,7 +302,7 @@ export function EditForm({ promptId, initial }: Props) {
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-1.5">URL Slug *</label>
                 <div className="flex items-center gap-2">
-                  <span className="text-zinc-500 text-sm shrink-0">promptvault.dev/p/</span>
+                  <span className="text-zinc-500 text-sm shrink-0">{process.env.NEXT_PUBLIC_BASE_URL}/p/</span>
                   <input value={slug} onChange={e => setSlug(generateSlug(e.target.value))} className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-violet-500 transition-colors" />
                 </div>
               </div>
@@ -319,7 +319,7 @@ export function EditForm({ promptId, initial }: Props) {
               <div className="bg-zinc-800 rounded-lg p-4">
                 <p className="text-xs text-zinc-500 mb-3 font-medium uppercase tracking-wide">Preview</p>
                 <p className="text-blue-400 text-sm">{seoTitle || title}</p>
-                <p className="text-emerald-500 text-xs">promptvault.dev/p/{slug}</p>
+                <p className="text-emerald-500 text-xs">{process.env.NEXT_PUBLIC_BASE_URL}/p/{slug}</p>
                 <p className="text-zinc-400 text-xs leading-relaxed mt-0.5">{(seoDesc || description).slice(0, 160)}</p>
               </div>
             </div>
@@ -337,7 +337,7 @@ export function EditForm({ promptId, initial }: Props) {
                   { label: "Preview", value: `${previewContent.length} chars`, ok: previewContent.trim().length > 20 },
                   { label: "Category", value: CATEGORIES.find(c => c.value === category)?.label ?? category, ok: true },
                   { label: "Pricing", value: pricingType === "free" ? "Free" : pricingType === "pwyw" ? `PWYW (min $${minPrice})` : `$${price}`, ok: true },
-                  { label: "Slug", value: `promptvault.dev/p/${slug}`, ok: slug.trim().length > 0 },
+                  { label: "Slug", value: `${process.env.NEXT_PUBLIC_BASE_URL}/p/${slug}`, ok: slug.trim().length > 0 },
                 ].map(({ label, value, ok }) => (
                   <div key={label} className="flex items-center justify-between py-2 border-b border-zinc-800 last:border-0">
                     <span className="text-sm text-zinc-400">{label}</span>

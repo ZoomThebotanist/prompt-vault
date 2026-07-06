@@ -663,6 +663,51 @@ export const publishLogRelations = relations(publishLogs, ({ one }) => ({
   postPlatform: one(publisherPostPlatforms, { fields: [publishLogs.postPlatformId], references: [publisherPostPlatforms.id] }),
 }));
 
+// ─── Creator Applications ──────────────────────────────────────────────────
+
+export const creatorApplications = pgTable(
+  "creator_applications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    // Profile info
+    displayName: text("display_name").notNull(),
+    username: text("username"),
+    headline: text("headline"),
+    bio: text("bio"),
+    website: text("website"),
+    portfolio: text("portfolio"),
+    twitterHandle: text("twitter_handle"),
+    githubHandle: text("github_handle"),
+    linkedinHandle: text("linkedin_handle"),
+    discordHandle: text("discord_handle"),
+    // Application fields
+    specialties: text("specialties").array().notNull().default([]),
+    experienceLevel: text("experience_level").notNull().default("beginner"),
+    // Payout
+    payoutEmail: text("payout_email").notNull(),
+    paymentMethod: text("payment_method").notNull().default("stripe"),
+    // Tax / agreement
+    agreedToTerms: boolean("agreed_to_terms").notNull().default(false),
+    // Status
+    status: text("status").notNull().default("pending"), // pending | approved | rejected
+    rejectionReason: text("rejection_reason"),
+    reviewedBy: text("reviewed_by").references(() => user.id),
+    reviewedAt: timestamp("reviewed_at"),
+    // Timestamps
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("creator_apps_user_idx").on(t.userId), index("creator_apps_status_idx").on(t.status)]
+);
+
+export const creatorApplicationRelations = relations(creatorApplications, ({ one }) => ({
+  user: one(user, { fields: [creatorApplications.userId], references: [user.id] }),
+  reviewer: one(user, { fields: [creatorApplications.reviewedBy], references: [user.id] }),
+}));
+
+export type CreatorApplication = typeof creatorApplications.$inferSelect;
+
 // ─── Publisher: Types ─────────────────────────────────────────────────────────
 
 export type PublisherAccount = typeof publisherAccounts.$inferSelect;

@@ -18,17 +18,27 @@ export const redditAdapter: PlatformAdapter = {
   },
 
   transform(content: PlatformContent): Record<string, unknown> {
-    const isLink = Boolean(content.link) && !content.text;
+    // Always post as text ("self") so it won't be spam-filtered as a link post.
+    // The link is stored in commentLink and posted as the first comment after submission.
+    const firstLine = content.text?.split("\n")[0]?.slice(0, 300) ?? "";
+    const title = firstLine || "Shared from Prompt Vault";
+    // Body is the full text without the first line used as title (if multi-line), else full text
+    const lines = content.text?.split("\n") ?? [];
+    const body = lines.length > 1 ? lines.slice(1).join("\n").trim() : (content.text ?? "");
+
     return {
-      kind: isLink ? "link" : "self",
-      title: content.text?.split("\n")[0]?.slice(0, 300) ?? "Shared from Prompt Vault",
-      text: isLink ? undefined : content.text,
-      url: isLink ? content.link : undefined,
-      // sr (subreddit) must be provided at publish time via account metadata
+      kind: "self",
+      title,
+      text: body,
+      commentLink: content.link ?? null,
+      // sr (subreddit) is injected by queue.ts from account metadata
     };
   },
 
   async publish(payload: Record<string, unknown>, accessToken: string): Promise<PublishResult> {
+    const sr = String(payload.sr ?? "").replace(/^r\//, "").trim();
+    if (!sr) throw new Error("Reddit account is missing a subreddit — edit the account and add one");
+
     const res = await fetch("https://oauth.reddit.com/api/submit", {
       method: "POST",
       headers: {
@@ -38,23 +48,73 @@ export const redditAdapter: PlatformAdapter = {
       },
       body: new URLSearchParams({
         api_type: "json",
-        kind: String(payload.kind ?? "self"),
+        kind: "self",
+        sr,
         title: String(payload.title ?? ""),
         text: String(payload.text ?? ""),
-        url: String(payload.url ?? ""),
-        sr: String(payload.sr ?? ""),
       }),
     });
 
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Reddit API error ${res.status}: ${body}`);
+    const raw = await res.json() as {
+      json?: {
+        errors?: [string, string, string][];
+        data?: { id?: string; url?: string; name?: string };
+      };
+    };
+
+    // Reddit returns HTTP 200 even on errors — check the JSON body
+    const errors = raw?.json?.errors;
+    if (errors && errors.length > 0) {
+      const msg = errors.map(([code, message]) => `${code}: ${message}`).join("; ");
+      throw new Error(`Reddit rejected post: ${msg}`);
     }
 
-    const data = await res.json() as { json: { data: { id: string; url: string } } };
+    if (!res.ok) {
+      throw new Error(`Reddit API error ${res.status}`);
+    }
+
+    const postId = raw?.json?.data?.id ?? raw?.json?.data?.name?.replace("t3_", "");
+    const postUrl = raw?.json?.data?.url ?? "";
+
+    if (!postId) throw new Error("Reddit did not return a post ID");
+
+    // Post the website link as the first comment so the post stays spam-filter-safe
+    const commentLink = payload.commentLink as string | null;
+    if (commentLink) {
+      await postLinkAsComment(accessToken, postId, commentLink);
+    }
+
     return {
-      platformPostId: data.json.data.id,
-      publishedUrl: data.json.data.url,
+      platformPostId: postId,
+      publishedUrl: postUrl,
     };
   },
 };
+
+async function postLinkAsComment(accessToken: string, postId: string, link: string): Promise<void> {
+  try {
+    const res = await fetch("https://oauth.reddit.com/api/comment", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "PromptVault/1.0",
+      },
+      body: new URLSearchParams({
+        api_type: "json",
+        thing_id: `t3_${postId}`,
+        text: link,
+      }),
+    });
+
+    const raw = await res.json() as { json?: { errors?: [string, string, string][] } };
+    const errors = raw?.json?.errors;
+    if (errors && errors.length > 0) {
+      // Non-fatal — post succeeded, just log the comment failure
+      console.error(`Reddit comment post failed: ${errors.map(([c, m]) => `${c}: ${m}`).join("; ")}`);
+    }
+  } catch (err) {
+    // Non-fatal — the post itself succeeded
+    console.error("Failed to post link as Reddit comment:", err);
+  }
+}

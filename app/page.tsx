@@ -48,8 +48,8 @@ async function HomeHero() {
           <Link href="/browse" className="bg-violet-600 hover:bg-violet-500 text-white font-semibold px-7 py-3.5 rounded-xl transition-colors text-base">
             Browse Prompts →
           </Link>
-          <Link href="/onboard" className="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-colors text-base border border-zinc-700">
-            Start Selling
+          <Link href="/become-a-creator" className="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-colors text-base border border-zinc-700">
+            Become a Creator
           </Link>
         </div>
 
@@ -212,19 +212,54 @@ export default function HomePage() {
           <p className="text-zinc-400 mb-8 max-w-md mx-auto">
             Join thousands of creators earning on PromptVault. Set up your store in 2 minutes. Keep 80% of every sale.
           </p>
-          <Link href="/onboard" className="bg-violet-600 hover:bg-violet-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-base">
+          <Link href="/become-a-creator" className="bg-violet-600 hover:bg-violet-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-base">
             Become a Creator →
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-zinc-800 px-6 py-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-4">
-          <span className="text-white font-bold">Prompt<span className="text-violet-400">Vault</span></span>
-          <div className="flex items-center gap-5 text-sm text-zinc-500">
-            <Link href="/browse" className="hover:text-zinc-300 transition-colors">Browse</Link>
-            <Link href="/onboard" className="hover:text-zinc-300 transition-colors">Sell</Link>
-            <a href="mailto:support@promptvault.dev" className="hover:text-zinc-300 transition-colors">Support</a>
+      <footer className="border-t border-zinc-800 px-6 py-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
+            <div className="col-span-2 sm:col-span-1">
+              <Link href="/" className="text-white font-bold text-lg">
+                Prompt<span className="text-violet-400">Vault</span>
+              </Link>
+              <p className="text-zinc-600 text-xs mt-2 leading-relaxed max-w-[160px]">
+                The marketplace for expert AI products.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Marketplace</p>
+              <div className="space-y-2">
+                <Link href="/browse" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">Browse</Link>
+                <Link href="/browse?sort=trending" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">Trending</Link>
+                <Link href="/browse?sort=newest" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">New Arrivals</Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Creators</p>
+              <div className="space-y-2">
+                <Link href="/become-a-creator" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">Become a Creator</Link>
+                <Link href="/onboard" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">Apply Now</Link>
+                <Link href="/dashboard" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">Creator Dashboard</Link>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Account</p>
+              <div className="space-y-2">
+                <Link href="/login" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">Sign In</Link>
+                <Link href="/register" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">Register</Link>
+                <a href="mailto:support@promptvault.dev" className="block text-sm text-zinc-600 hover:text-zinc-300 transition-colors">Support</a>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-zinc-800 pt-6 flex items-center justify-between flex-wrap gap-3">
+            <p className="text-xs text-zinc-700">© {new Date().getFullYear()} PromptVault. All rights reserved.</p>
+            <div className="flex items-center gap-4 text-xs text-zinc-700">
+              <Link href="/terms" className="hover:text-zinc-500 transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-zinc-500 transition-colors">Privacy</Link>
+            </div>
           </div>
         </div>
       </footer>

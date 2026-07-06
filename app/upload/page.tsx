@@ -363,7 +363,7 @@ export default function UploadPage() {
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-1.5">URL Slug *</label>
                 <div className="flex items-center gap-2">
-                  <span className="text-zinc-500 text-sm shrink-0">promptvault.dev/p/</span>
+                  <span className="text-zinc-500 text-sm shrink-0">{process.env.NEXT_PUBLIC_BASE_URL}/p/</span>
                   <input value={slug} onChange={e => setSlug(generateSlug(e.target.value))} placeholder={generateSlug(title) || "my-awesome-prompt"} className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-violet-500 transition-colors" />
                 </div>
               </div>
@@ -381,7 +381,7 @@ export default function UploadPage() {
                 <p className="text-xs text-zinc-500 mb-3 font-medium uppercase tracking-wide">Search Preview</p>
                 <div className="space-y-0.5">
                   <p className="text-blue-400 text-sm">{seoTitle || title || "Prompt Title"}</p>
-                  <p className="text-emerald-500 text-xs">promptvault.dev/p/{slug || "my-prompt"}</p>
+                  <p className="text-emerald-500 text-xs">{process.env.NEXT_PUBLIC_BASE_URL}/p/{slug || "my-prompt"}</p>
                   <p className="text-zinc-400 text-xs leading-relaxed">{(seoDesc || description).slice(0, 160)}</p>
                 </div>
               </div>
@@ -400,7 +400,7 @@ export default function UploadPage() {
                   { label: "Preview", value: `${previewContent.length} characters`, ok: previewContent.trim().length > 20 },
                   { label: "Category", value: CATEGORIES.find(c => c.value === category)?.label ?? category, ok: true },
                   { label: "Pricing", value: pricingType === "free" ? "Free" : pricingType === "pwyw" ? `PWYW (min $${minPrice})` : `$${price}`, ok: true },
-                  { label: "URL Slug", value: `promptvault.dev/p/${slug}`, ok: slug.trim().length > 0 },
+                  { label: "URL Slug", value: `${process.env.NEXT_PUBLIC_BASE_URL}/p/${slug}`, ok: slug.trim().length > 0 },
                   { label: "Models", value: models.join(", ") || "None selected", ok: models.length > 0 },
                 ].map(({ label, value, ok }) => (
                   <div key={label} className="flex items-start justify-between py-2 border-b border-zinc-800 last:border-0">

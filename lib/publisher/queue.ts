@@ -3,6 +3,7 @@ import { publisherPosts, publisherPostPlatforms, publisherAccounts, publishLogs 
 import { eq, and, lte, inArray, or, isNull, sql } from "drizzle-orm";
 import { getAdapter } from "./adapters";
 import type { PlatformSlug } from "./types";
+import { rewriteForReddit } from "./reddit-rewrite";
 
 const BATCH_SIZE = 10;
 const MAX_ATTEMPTS = 5;
@@ -59,8 +60,21 @@ export async function runPublishCycle(): Promise<{ processed: number; succeeded:
       if (!account.accessToken) throw new Error("No access token — reconnect this account");
 
       const adapter = getAdapter(row.platform as PlatformSlug);
+      const accountMeta = account.metadata ? (JSON.parse(account.metadata) as Record<string, unknown>) : {};
+
+      let contentText = row.customText ?? post.description ?? "";
+
+      // For Reddit: rewrite content to be native and non-promotional using Claude AI
+      if (row.platform === "reddit" && contentText) {
+        const subreddit = String(accountMeta.subreddit ?? "");
+        const rewritten = await rewriteForReddit(contentText, subreddit || "general");
+        if (rewritten) {
+          contentText = `${rewritten.title}\n${rewritten.body}`;
+        }
+      }
+
       const content = {
-        text: row.customText ?? post.description ?? "",
+        text: contentText,
         hashtags: (row.customHashtags?.length ? row.customHashtags : post.hashtags) ?? [],
         link: post.link ?? undefined,
         mediaUrls: post.mediaUrls ?? [],
@@ -72,6 +86,12 @@ export async function runPublishCycle(): Promise<{ processed: number; succeeded:
       }
 
       const payload = adapter.transform(content);
+
+      // Inject platform-specific account metadata into payload
+      if (row.platform === "reddit") {
+        payload.sr = String(accountMeta.subreddit ?? "");
+      }
+
       const result = await adapter.publish(payload, account.accessToken);
       const latency = Date.now() - start;
 
