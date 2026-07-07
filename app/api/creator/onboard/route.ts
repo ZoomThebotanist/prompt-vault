@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     await db.delete(creatorApplications).where(eq(creatorApplications.userId, session.user.id));
   }
 
-  // Create application
+  // Create application — auto-approved, no manual review queue
   await db.insert(creatorApplications).values({
     userId: session.user.id,
     displayName: displayName.trim(),
@@ -73,17 +73,31 @@ export async function POST(req: NextRequest) {
     payoutEmail: (payoutEmail?.trim() || session.user.email) as string,
     paymentMethod: paymentMethod || "stripe",
     agreedToTerms: true,
+    status: "approved",
+    reviewedAt: new Date(),
   });
 
-  // Update username on user record if provided
-  if (username?.trim()) {
-    await db.update(user).set({
-      username: username.trim().toLowerCase(),
-      updatedAt: new Date(),
-    }).where(eq(user.id, session.user.id));
-  }
+  // Create creator profile immediately
+  await db.insert(creatorProfiles).values({
+    userId: session.user.id,
+    displayName: displayName.trim(),
+    headline: headline?.trim() || null,
+    bio: bio?.trim() || null,
+    website: website?.trim() || null,
+    twitterHandle: twitterHandle?.trim().replace(/^@/, "") || null,
+    githubHandle: githubHandle?.trim().replace(/^@/, "") || null,
+    payoutEmail: (payoutEmail?.trim() || session.user.email) as string,
+    onboardedAt: new Date(),
+  });
 
-  return NextResponse.json({ success: true, status: "pending" });
+  // Upgrade user role to creator immediately
+  await db.update(user).set({
+    role: "creator",
+    updatedAt: new Date(),
+    ...(username?.trim() ? { username: username.trim().toLowerCase() } : {}),
+  }).where(eq(user.id, session.user.id));
+
+  return NextResponse.json({ success: true, status: "approved" });
 }
 
 export async function GET(req: NextRequest) {

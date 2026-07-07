@@ -49,6 +49,7 @@ export default function UploadPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [coverUploading, setCoverUploading] = useState(false);
 
   // Step 1: Basics
   const [title, setTitle] = useState("");
@@ -338,8 +339,60 @@ export default function UploadPage() {
             <div className="space-y-5">
               <h2 className="text-lg font-semibold text-white">Preview & Examples</h2>
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1.5">Cover Image URL <span className="text-zinc-500 font-normal">(optional)</span></label>
-                <input value={coverUrl} onChange={e => setCoverUrl(e.target.value)} placeholder="https://..." className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-violet-500 transition-colors" />
+                <label className="block text-sm font-medium text-zinc-300 mb-1.5">Cover Image <span className="text-zinc-500 font-normal">(optional)</span></label>
+                {coverUrl ? (
+                  <div className="relative group mb-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={coverUrl} alt="Cover preview" className="w-full h-40 object-cover rounded-lg border border-zinc-700" />
+                    <button
+                      type="button"
+                      onClick={() => setCoverUrl("")}
+                      className="absolute top-2 right-2 bg-black/60 hover:bg-red-600 text-white text-xs px-2 py-1 rounded transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${coverUploading ? "border-violet-500/50 bg-violet-500/5" : "border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800/50"}`}>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      disabled={coverUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setCoverUploading(true);
+                        try {
+                          const fd = new FormData();
+                          fd.append("file", file);
+                          const res = await fetch("/api/upload", { method: "POST", body: fd });
+                          const data = await res.json();
+                          if (res.ok) setCoverUrl(data.url);
+                          else setError(data.error ?? "Upload failed");
+                        } catch {
+                          setError("Upload failed — try again");
+                        } finally {
+                          setCoverUploading(false);
+                        }
+                      }}
+                    />
+                    {coverUploading ? (
+                      <div className="flex items-center gap-2 text-zinc-400 text-sm">
+                        <span className="w-4 h-4 border-2 border-zinc-600 border-t-violet-400 rounded-full animate-spin" />
+                        Uploading...
+                      </div>
+                    ) : (
+                      <>
+                        <svg className="w-8 h-8 text-zinc-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-sm text-zinc-400">Click to upload</span>
+                        <span className="text-xs text-zinc-600 mt-1">JPEG, PNG, WebP, GIF · max 5MB</span>
+                      </>
+                    )}
+                  </label>
+                )}
                 <p className="text-xs text-zinc-500 mt-1">Recommended: 1200×630px. Prompts with cover images get 3× more clicks.</p>
               </div>
               <div>

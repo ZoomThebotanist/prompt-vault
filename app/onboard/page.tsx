@@ -100,11 +100,10 @@ export default function OnboardPage() {
       const data = await res.json();
       if (!res.ok) {
         if (data.alreadyCreator) { router.push("/dashboard"); return; }
-        if (data.applicationPending) { setAppStatus("pending"); return; }
+        if (data.applicationPending) { router.push("/dashboard"); return; }
         setError(data.error ?? "Failed to submit application.");
       } else {
-        setSubmitted(true);
-        setAppStatus("pending");
+        router.push("/dashboard");
       }
     } catch { setError("Something went wrong. Please try again."); }
     finally { setLoading(false); }
